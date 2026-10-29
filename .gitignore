@@ -17,3 +17,6 @@ dist/
 /config.json
 /report.json
 /config/
+
+# Private CA output
+/pki/

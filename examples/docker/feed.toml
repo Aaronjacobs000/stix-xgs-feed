@@ -1,0 +1,40 @@
+# Config for the Docker example. Copy to config/feed.toml and edit.
+# In the container /config is the config folder (read-only), /data is the
+# volume, and compose secrets appear under /run/secrets.
+
+[[sources]]
+name = "isac"
+type = "taxii"
+url = "https://taxii.example.org/api1/collections/91a7b528-80eb-42ed-a74d-c6fbd5a26116/"
+
+[sources.auth]
+type = "basic"
+username = "feeduser"
+password = "file:/run/secrets/isac_password"
+
+[output]
+dir = "/data/feeds"
+report = "/data/report.json"
+
+[filter]
+allowlist = "/config/allowlist.txt"
+min_confidence = 50
+max_age_days = 90
+
+[limits]
+model = "XGS 2100"
+quota_share = 0.5
+
+[serve]
+listen = "0.0.0.0"                     # inside the container; compose picks the host address
+port = 8443
+tls_cert = "/config/tls/server.pem"
+tls_key = "/config/tls/server.key"
+refresh_minutes = 60
+retry_minutes = 5
+allowed_clients = ["192.0.2.1"]        # the firewall's address (see the README if Docker hides it)
+
+[serve.auth]
+type = "basic"
+username = "xgs"
+password = "file:/run/secrets/feed_password"

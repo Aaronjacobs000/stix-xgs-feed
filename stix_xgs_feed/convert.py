@@ -1,31 +1,17 @@
-#!/usr/bin/env python3
-"""Convert STIX sources into Sophos Firewall third-party threat feed files.
+"""Core conversion: STIX parsing, extraction, filtering, normalization and limits.
 
-Reads STIX 2.0/2.1 bundles (files, HTTPS URLs or TAXII 2.1 collections) and
-STIX 1.x XML packages, extracts IPv4/IPv6 addresses, domains and URLs from
-indicator patterns and cyber observables, filters and normalises them, and
-writes three plain-text files with one indicator per line, the format the
-Sophos Firewall "Third-party threat feeds" feature polls:
-
-    ips.txt      IPv4 addresses
-    domains.txt  domain names
-    urls.txt     URLs
-
-Standard library only. Python 3.9 or later.
+Reads STIX 2.x objects and STIX 1.x XML packages, extracts IPv4/IPv6 addresses,
+domains and URLs from indicator patterns and cyber observables, filters and
+normalizes them, and returns them ready for the three plain-text files that
+Sophos Firewall third-party threat feeds poll (ips.txt, domains.txt, urls.txt).
 """
 from __future__ import annotations
 
-import argparse
-import base64
 import ipaddress
-import json
 import os
 import re
-import ssl
-import sys
 import tempfile
 import urllib.parse
-import urllib.request
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -35,8 +21,6 @@ try:  # Hardened XML parsing when available; stdlib expat otherwise.
     from defusedxml import ElementTree as ET  # type: ignore
 except ImportError:  # pragma: no cover
     import xml.etree.ElementTree as ET  # noqa: N817
-
-__version__ = "0.1.0"
 
 # --------------------------------------------------------------------------
 # Constants
@@ -424,7 +408,7 @@ def extract_from_pattern(pattern: str, now: datetime, skipped: Counter) -> list:
 
 
 # --------------------------------------------------------------------------
-# Normalisation
+# Normalization
 # --------------------------------------------------------------------------
 
 @dataclass
@@ -967,7 +951,7 @@ def model_limits(model: str):
     for names, limits in MODEL_LIMITS:
         if key in names:
             return limits
-    raise SystemExit(f"Unknown model {model!r}. Known: " + ", ".join(n for names, _ in MODEL_LIMITS for n in names))
+    raise ValueError(f"unknown model {model!r}; known: " + ", ".join(n for names, _ in MODEL_LIMITS for n in names))
 
 
 def quota_fraction(ips, domains, urls, limits) -> float:
@@ -1003,80 +987,8 @@ def apply_caps(out: dict, args, dropped: Counter, report: dict):
 
 
 # --------------------------------------------------------------------------
-# I/O
+# Output
 # --------------------------------------------------------------------------
-
-USER_AGENT = {"User-Agent": f"stix-xgs-feed/{__version__}"}
-
-
-def build_headers(args) -> dict:
-    """Credential headers. They are sent to --taxii sources only."""
-    headers = dict(USER_AGENT)
-    for h in args.header or []:
-        name, _, value = h.partition(":")
-        value = value.strip()
-        if value.startswith("env:"):
-            value = os.environ.get(value[4:], "")
-        headers[name.strip()] = value
-    if args.taxii_user:
-        password = os.environ.get(args.taxii_password_env, "")
-        token = base64.b64encode(f"{args.taxii_user}:{password}".encode()).decode()
-        headers["Authorization"] = f"Basic {token}"
-    return headers
-
-
-def ssl_context(args) -> ssl.SSLContext:
-    return ssl.create_default_context(cafile=args.ca_file) if args.ca_file else ssl.create_default_context()
-
-
-class _SameHostRedirect(urllib.request.HTTPRedirectHandler):
-    """Follow redirects, but drop credentials when the host changes."""
-
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        new = super().redirect_request(req, fp, code, msg, headers, newurl)
-        if new is not None and urllib.parse.urlsplit(newurl).netloc != urllib.parse.urlsplit(req.full_url).netloc:
-            for name in list(new.headers):
-                if name.lower() not in ("user-agent", "accept"):
-                    del new.headers[name]
-        return new
-
-
-def http_get(url: str, headers: dict, ctx, accept: str | None = None) -> bytes:
-    h = dict(headers)
-    if accept:
-        h["Accept"] = accept
-    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx), _SameHostRedirect)
-    with opener.open(urllib.request.Request(url, headers=h), timeout=120) as resp:
-        return resp.read()
-
-
-def taxii_objects(collection_url: str, args, headers: dict, ctx):
-    base = collection_url if collection_url.rstrip("/").endswith("/objects") else collection_url.rstrip("/") + "/objects"
-    base = base.rstrip("/") + "/"
-    params = {}
-    if args.added_after:
-        params["added_after"] = args.added_after
-    if args.page_size:
-        params["limit"] = str(args.page_size)
-    nxt, pages = None, 0
-    while True:
-        q = dict(params)
-        if nxt:
-            q["next"] = nxt
-        url = base + ("?" + urllib.parse.urlencode(q) if q else "")
-        body = json.loads(http_get(url, headers, ctx, "application/taxii+json;version=2.1"))
-        pages += 1
-        yield from body.get("objects") or []
-        if not body.get("more") or not body.get("next") or pages >= args.max_pages:
-            break
-        nxt = body["next"]
-
-
-def load_source(src: str, headers: dict, ctx) -> bytes:
-    if re.match(r"^https?://", src, re.I):
-        return http_get(src, headers, ctx)
-    return Path(src).read_bytes()
-
 
 def write_atomic(path: Path, lines: list):
     data = "".join(line + "\n" for line in lines).encode("ascii")
@@ -1095,163 +1007,3 @@ def write_atomic(path: Path, lines: list):
 def _ip_sort(value: str):
     ip = ipaddress.ip_address(value)
     return (ip.version, int(ip))
-
-
-# --------------------------------------------------------------------------
-# CLI
-# --------------------------------------------------------------------------
-
-def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(
-        prog="stix-xgs-feed",
-        description="Convert STIX sources into Sophos Firewall third-party threat feed files "
-                    "(ips.txt, domains.txt, urls.txt; one indicator per line).",
-    )
-    src = p.add_argument_group("sources (at least one)")
-    src.add_argument("--input", "-i", action="append", default=[], metavar="FILE_OR_URL",
-                     help="STIX 2.x JSON bundle or STIX 1.x XML package, local path or http(s) URL. Repeatable.")
-    src.add_argument("--taxii", action="append", default=[], metavar="COLLECTION_URL",
-                     help="TAXII 2.1 collection URL (.../collections/<id>/). Repeatable.")
-    src.add_argument("--added-after", metavar="TIMESTAMP", help="TAXII added_after filter, e.g. 2026-08-01T00:00:00Z.")
-    src.add_argument("--page-size", type=int, default=None, help="TAXII page size (limit parameter).")
-    src.add_argument("--max-pages", type=int, default=10_000, help="Stop after this many TAXII pages (default 10000).")
-
-    auth = p.add_argument_group("authentication and TLS (credentials go to --taxii sources only)")
-    auth.add_argument("--taxii-user", help="Basic auth user for TAXII sources.")
-    auth.add_argument("--taxii-password-env", default="TAXII_PASSWORD",
-                      help="Environment variable holding the basic auth password (default TAXII_PASSWORD).")
-    auth.add_argument("--header", action="append", metavar="'Name: value'",
-                      help="Extra HTTP header for TAXII sources, e.g. an API key; 'Name: env:VAR' reads the value "
-                           "from the environment. Repeatable.")
-    auth.add_argument("--ca-file", help="CA bundle for a server with a private certificate.")
-
-    flt = p.add_argument_group("filtering")
-    flt.add_argument("--observables", choices=("none", "linked", "all"), default="linked",
-                     help="Bare observables (SCOs) to include: none; linked (default) = only those tied by a "
-                          "relationship to a valid indicator, malware, infrastructure, threat actor, intrusion "
-                          "set, campaign or tool; all.")
-    flt.add_argument("--broaden", action="store_true",
-                     help="Also emit values from compound patterns (AND, FOLLOWEDBY, port or protocol conditions). "
-                          "Off by default because the bare value is broader than the indicator.")
-    flt.add_argument("--min-confidence", type=int, default=0,
-                     help="Drop indicators below this STIX confidence (0-100). Objects without a confidence pass.")
-    flt.add_argument("--max-tlp", choices=("clear", "white", "green", "amber", "amber+strict", "red"), default="amber",
-                     help="Highest TLP marking to publish (default amber; RED and AMBER+STRICT are dropped).")
-    flt.add_argument("--max-age-days", type=int, default=None,
-                     help="Drop indicators with no valid_until whose last modification is older than this.")
-    flt.add_argument("--allowlist", help="File of IPs/CIDRs, domains (covers subdomains) and URL prefixes never to publish.")
-    flt.add_argument("--keep-internal", action="store_true",
-                     help="Keep RFC 1918, CGNAT, loopback, link-local, multicast, reserved and internal-suffix values.")
-    flt.add_argument("--expand-cidr", type=int, metavar="PREFIX", default=None,
-                     help="Expand IPv4 CIDRs of this prefix length or longer into single addresses "
-                          "(Sophos Firewall does not accept ranges). Default: drop CIDRs.")
-
-    lim = p.add_argument_group("limits")
-    lim.add_argument("--model", help="Firewall model for the KBA-000010056 storage check, e.g. 'XGS 2100', 'virtual'.")
-    lim.add_argument("--quota-share", type=float, default=1.0,
-                     help="Share of the model's third-party feed storage this feed may use (default 1.0). "
-                          "Over budget, each file is trimmed to its highest-confidence, newest entries.")
-    lim.add_argument("--max-ips", type=int)
-    lim.add_argument("--max-domains", type=int)
-    lim.add_argument("--max-urls", type=int)
-
-    out = p.add_argument_group("output")
-    out.add_argument("--out", "-o", required=True, help="Output directory for ips.txt, domains.txt and urls.txt.")
-    out.add_argument("--ipv6-file", action="store_true",
-                     help="Also write ipv6.txt. Sophos Firewall feeds do not accept IPv6, so it is for other uses.")
-    out.add_argument("--report", help="Write a JSON run report here. Keep it outside the served directory.")
-    out.add_argument("--now", help="Override the current time (testing), e.g. 2026-10-29T00:00:00Z.")
-    out.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    return p
-
-
-def main(argv=None) -> int:
-    args = build_parser().parse_args(argv)
-    if not args.input and not args.taxii:
-        print("error: give at least one --input or --taxii source", file=sys.stderr)
-        return 2
-    now = parse_ts(args.now) if args.now else datetime.now(timezone.utc)
-    if now is None:
-        print("error: --now is not a valid timestamp", file=sys.stderr)
-        return 2
-    headers = build_headers(args)
-    ctx = ssl_context(args)
-    collector = Collector(args, now, Allowlist.load(args.allowlist))
-
-    # Fail closed: any source error aborts before files are touched, so the
-    # firewall keeps polling the last good set rather than a partial one.
-    try:
-        for src in args.input:
-            data = load_source(src, USER_AGENT, ctx)
-            head = data.lstrip()[:1]
-            if head == b"<":
-                collector.stats["stix1_packages"] += 1
-                collector.process_stix1(data)
-                continue
-            doc = json.loads(data)
-            objs = doc.get("objects", []) if isinstance(doc, dict) else doc
-            if isinstance(doc, dict) and doc.get("type") not in (None, "bundle") and "objects" not in doc:
-                objs = [doc]
-            collector.stats["stix2_sources"] += 1
-            collector.add_stix2(objs)
-        for coll in args.taxii:
-            collector.stats["taxii_collections"] += 1
-            collector.add_stix2(taxii_objects(coll, args, headers, ctx))
-    except Exception as exc:  # noqa: BLE001
-        print(f"error: failed to load sources, no files written: {exc}", file=sys.stderr)
-        return 1
-
-    collector.process_stix2()
-    out = collector.results()
-    if out["ipv6"] and not args.ipv6_file:
-        collector.values_dropped["ipv6_unsupported_by_sfos"] += len(out["ipv6"])
-
-    report: dict = {}
-    apply_caps(out, args, collector.values_dropped, report)
-
-    out_dir = Path(args.out)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    files = {
-        "ips.txt": sorted((c.value for c in out["ipv4"]), key=_ip_sort),
-        "domains.txt": sorted(c.value for c in out["domain"]),
-        "urls.txt": sorted(c.value for c in out["url"]),
-    }
-    if args.ipv6_file:
-        files["ipv6.txt"] = sorted((c.value for c in out["ipv6"]), key=_ip_sort)
-    for name, lines in files.items():
-        write_atomic(out_dir / name, lines)
-
-    report.update({
-        "generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "version": __version__,
-        "written": {name: len(lines) for name, lines in files.items()},
-        "stats": dict(sorted(collector.stats.items())),
-        "objects_dropped": dict(sorted(collector.objects_dropped.items())),
-        "values_dropped": dict(sorted(collector.values_dropped.items())),
-        "pattern_parse_errors": collector.parse_errors,
-    })
-    if args.report:
-        Path(args.report).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-
-    print(f"stix-xgs-feed {__version__}  {report['generated']}  -> {out_dir}")
-    for name, n in report["written"].items():
-        print(f"  {name:<12} {n:>8}")
-    if "model" in report:
-        m = report["model"]
-        print(f"  model {m['model']}: estimated storage use {m['estimated_use_after_trim']:.4%} "
-              f"of the third-party feed quota (this feed may use {m['quota_share']:.4%})")
-    print("  stats:          " + ", ".join(f"{k}={v}" for k, v in report["stats"].items()))
-    if report["objects_dropped"]:
-        print("  objects dropped: " + ", ".join(f"{k}={v}" for k, v in report["objects_dropped"].items()))
-    if report["values_dropped"]:
-        print("  values dropped:  " + ", ".join(f"{k}={v}" for k, v in report["values_dropped"].items()))
-    for err in collector.parse_errors:
-        print(f"  parse error {err['id']}: {err['error']}")
-    for name, n in report["written"].items():
-        if n == 0:
-            print(f"  warning: {name} is empty; check how the firewall treats an empty feed before relying on it")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

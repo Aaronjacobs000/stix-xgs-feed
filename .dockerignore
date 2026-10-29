@@ -1,0 +1,17 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+tests
+examples
+scripts
+config
+secrets
+data
+feeds
+tls
+*.env
+*.key
+*.pem
+compose.yaml
+Dockerfile

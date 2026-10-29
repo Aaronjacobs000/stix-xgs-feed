@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stix-xgs-feed"
+dynamic = ["version"]
+description = "Turn STIX threat intel into Sophos Firewall third-party threat feed files, and optionally serve them over HTTPS. Unofficial."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Aaron Jacobs" }]
+requires-python = ">=3.9"
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+]
+
+[project.scripts]
+stix-xgs-feed = "stix_xgs_feed.cli:main"
+
+[tool.setuptools]
+packages = ["stix_xgs_feed"]
+
+[tool.setuptools.dynamic]
+version = { attr = "stix_xgs_feed.__version__" }

@@ -1,0 +1,31 @@
+# stix-xgs-feed in serve mode. Setup steps: README, section "Docker".
+services:
+  stix-xgs-feed:
+    build: .
+    image: stix-xgs-feed:local
+    restart: unless-stopped
+    ports:
+      # Set FEED_BIND_IP in .env to the LAN or DMZ address the firewall polls.
+      - "${FEED_BIND_IP:-0.0.0.0}:8443:8443"
+    volumes:
+      - ./config:/config:ro          # feed.toml, allowlist.txt, tls/server.pem, tls/server.key
+      - feed-data:/data              # the feed files and the run report
+    secrets:
+      - feed_password                # the password the firewall sends
+      - isac_password                # one per source credential
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  feed_password:
+    file: ./secrets/feed_password
+  isac_password:
+    file: ./secrets/isac_password
+
+volumes:
+  feed-data:

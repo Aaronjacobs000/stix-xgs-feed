@@ -1,0 +1,101 @@
+# stix-xgs-feed example config. Copy to config.toml and edit.
+# Relative paths resolve against this file's folder.
+# Secrets are never written here: every secret field takes env:NAME (an
+# environment variable) or file:/path (a file holding only the secret).
+
+# ---- Sources: any mix, any number --------------------------------------
+
+# TAXII 2.1 collection with basic auth
+[[sources]]
+name = "isac"
+type = "taxii"
+url = "https://taxii.example.org/api1/collections/91a7b528-80eb-42ed-a74d-c6fbd5a26116/"
+added_after = "2026-08-01T00:00:00Z"   # optional
+page_size = 1000                       # optional
+# ca_file = "certs/isac-ca.pem"        # only if the server uses a private CA
+
+[sources.auth]
+type = "basic"
+username = "feeduser"
+password = "env:ISAC_PASSWORD"
+
+# Plain STIX 2.x bundle over HTTPS with a bearer token
+[[sources]]
+name = "vendor"
+type = "url"
+url = "https://intel.example.com/stix/indicators.json"
+
+[sources.auth]
+type = "bearer"
+token = "file:/run/secrets/vendor_token"
+
+# STIX feed that wants an API key in a header, and a client certificate (mTLS)
+[[sources]]
+name = "partner"
+type = "url"
+url = "https://feeds.partner.example.net/v2/bundle.json"
+
+[sources.auth]
+type = "api_key"
+key_name = "X-Api-Key"
+key_value = "env:PARTNER_API_KEY"
+add_to = "header"                      # or "query" for ?X-Api-Key=...
+client_cert = "certs/partner-client.pem"
+client_key = "certs/partner-client.key"
+# client_key_password = "env:PARTNER_KEY_PASSWORD"   # only if the key is encrypted
+
+# Local STIX 1.x or 2.x export
+[[sources]]
+name = "local-export"
+type = "file"
+path = "exports/isac-export.xml"
+
+# ---- Output -------------------------------------------------------------
+
+[output]
+dir = "feeds"                          # ips.txt, domains.txt, urls.txt land here
+report = "reports/last-run.json"       # optional; keep it outside dir
+ipv6_file = false
+
+# ---- Filtering (all optional; these are the defaults unless noted) -------
+
+[filter]
+observables = "linked"                 # none | linked | all
+broaden = false
+min_confidence = 50                    # default 0
+max_tlp = "amber"                      # clear | white | green | amber | amber+strict | red
+max_age_days = 90                      # default: no age limit
+allowlist = "allowlist.txt"            # strongly recommended
+keep_internal = false
+# expand_cidr = 28                     # default: drop CIDRs
+
+# ---- Limits (optional) -------------------------------------------------
+
+[limits]
+model = "XGS 2100"                     # storage check per KBA-000010056
+quota_share = 0.5                      # share of the box's feed storage this feed may use
+# max_ips = 50000
+# max_domains = 50000
+# max_urls = 10000
+
+# ---- Serve mode (used only by `stix-xgs-feed serve`) ---------------------
+
+[serve]
+listen = "127.0.0.1"                   # a LAN address or 0.0.0.0 needs tls_cert, tls_key and auth
+port = 8443
+path_prefix = "/acme"                  # feed URLs: https://host:8443/acme/ips.txt and so on
+tls_cert = "tls/server.pem"            # from scripts/make-private-ca.sh, or a public certificate
+tls_key = "tls/server.key"
+refresh_minutes = 60                   # rebuild the files this often
+retry_minutes = 5                      # after a failed rebuild, try again this soon
+# allowed_clients = ["192.0.2.1"]      # the firewall's address; set it once listen is a LAN address
+max_connections = 32
+
+[serve.auth]
+type = "basic"                         # none | basic | api_key
+username = "xgs"
+password = "env:FEED_PASSWORD"         # 16 to 64 printable characters
+# type = "api_key"
+# key_name = "X-Feed-Key"
+# key_value = "env:FEED_API_KEY"       # 16 to 64 printable characters
+# add_to = "header"                    # or "query"
