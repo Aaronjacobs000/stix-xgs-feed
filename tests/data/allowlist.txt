@@ -1,0 +1,4 @@
+# Test allowlist
+sophos.com
+raw.githubusercontent.com
+198.51.100.240/28

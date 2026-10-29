@@ -1,0 +1,578 @@
+{
+  "type": "bundle",
+  "id": "bundle--38edf9a3-6e65-4f18-b971-0504ae75030c",
+  "objects": [
+    {
+      "type": "marking-definition",
+      "spec_version": "2.1",
+      "id": "marking-definition--e828b379-4e03-4974-9ac4-e53a884c97c1",
+      "created": "2022-10-01T00:00:00.000Z",
+      "name": "TLP:RED",
+      "extensions": {
+        "extension-definition--60a3c5c5-0d10-413e-aab3-9e08dde9e88d": {
+          "extension_type": "property-extension",
+          "tlp_2_0": "red"
+        }
+      }
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--a3842312-39c0-4189-b15c-7236889da34b",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "or-ip-domain",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.10' OR domain-name:value = 'c2-panel.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "description": "OR across types: both values are usable",
+      "confidence": 80,
+      "object_marking_refs": [
+        "marking-definition--34098fce-860f-48ae-8e50-ebd3cc5e41da"
+      ]
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--48932552-75ce-4e06-9957-c4fff8720a9a",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "in-set",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value IN ('203.0.113.5', '203.0.113.6')]",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 75
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--755f459a-af5f-4e1c-b890-f5862e5ccbf0",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "and-port",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[network-traffic:dst_ref.value = '203.0.113.77' AND network-traffic:dst_port = 4444]",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "description": "AND with a port: IP alone is broader than the indicator",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e27f3dac-6c91-4d31-b168-f2c5faee9c16",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "nt-typecheck",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[network-traffic:dst_ref.type = 'ipv4-addr' AND network-traffic:dst_ref.value = '198.51.100.20']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "description": "type check on the ref is not a narrowing condition",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--b23c9349-4574-4a97-8833-73da1646372f",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "followedby",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'stage1.evil.test'] FOLLOWEDBY [url:value = 'http://stage2.evil.test/payload.bin'] WITHIN 600 SECONDS",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e9dce30e-6c71-4188-a5b2-16c842ff9186",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "negated",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value != 'cdn.good.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--e09f3cb4-3b2c-4dfc-a8b6-f2abdfb35f1f",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "like-matches-or-url",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value LIKE '%.dyn-evil.test' OR url:value MATCHES '^https?://[a-z]+\\\\.evil\\\\.test/' OR url:value = 'https://kit.evil.test/gate.php?id=1']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--5cd409a2-4154-497f-a252-c0de80328ec1",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "cidr-subset",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value ISSUBSET '203.0.113.128/30']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--ea4e3086-95cd-4365-b0a5-501aeb7f0575",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "cidr-host",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.99/32']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 70
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--c5fd1f93-1ac2-4de5-b423-980de69683b0",
+      "created": "2025-06-01T00:00:00.000Z",
+      "modified": "2025-06-01T00:00:00.000Z",
+      "name": "expired",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'old-campaign.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2025-06-01T00:00:00Z",
+      "valid_until": "2026-01-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--a38a1253-5007-4e33-95aa-67323e90995e",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "not-yet-valid",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'future.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2027-01-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--656e4a22-7091-4707-b204-533c47b129fe",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "revoked",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.66']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--656e4a22-7091-4707-b204-533c47b129fe",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-10-01T00:00:00.000Z",
+      "name": "revoked",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.66']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "revoked": true,
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--818789a8-85ed-404c-b2e2-e1f533b9eaa8",
+      "created": "2026-08-01T00:00:00.000Z",
+      "modified": "2026-08-01T00:00:00.000Z",
+      "name": "updated",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'v1-only.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--818789a8-85ed-404c-b2e2-e1f533b9eaa8",
+      "created": "2026-08-01T00:00:00.000Z",
+      "modified": "2026-10-20T00:00:00.000Z",
+      "name": "updated",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'v2-current.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--2fba9708-19cc-4501-98eb-f5151f38c9ec",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "defanged",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[url:value = 'hxxp://payload.evil[.]test/drop/loader.exe' OR domain-name:value = 'phish-login[.]evil[.]test' OR ipv4-addr:value = '203.0.113[.]44']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 85
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--a736fd70-36c2-4c7b-9a11-1b0e4ec3aeaf",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "internal-ips",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '10.20.30.40' OR ipv4-addr:value = '192.168.1.10' OR domain-name:value = 'fileserver.corp']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 85
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--6af978fd-4ab7-4759-bca5-6cebeca50cec",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "ipv6",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv6-addr:value = '2001:db8::bad']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 85
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--8a7f3482-22b2-4c70-a10c-4382f475734d",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "tlp-red",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'red-only.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90,
+      "object_marking_refs": [
+        "marking-definition--e828b379-4e03-4974-9ac4-e53a884c97c1"
+      ]
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--f35b7ae4-dbdb-44de-ac95-7cd7df6f316b",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "tlp-amber-strict",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'strict.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90,
+      "object_marking_refs": [
+        "marking-definition--939a9414-2ddd-4d32-a0cd-375ea402b003"
+      ]
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--9f044813-e1d1-4934-b2df-20699a2b0b91",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "low-confidence",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'maybe.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 10
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--c104cfb4-6c0e-4e86-a70d-81b97962faa3",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "snort-rule",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "alert tcp any any -> 198.51.100.250 443 (msg:\"test\"; sid:1;)",
+      "pattern_type": "snort",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--d3d60172-7d02-447a-83c4-a672c6e7244a",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "file-hash",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[file:hashes.'SHA-256' = 'aa00000000000000000000000000000000000000000000000000000000000000']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--c1266028-f145-4155-98fb-4243e48dfebb",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "wildcard-domain",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = '*.wild.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--9848f7bc-83ba-4cd8-aee2-be030a572665",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "idn-domain",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'bücher-login.evil.test']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--4960f709-a16f-49cd-a3ad-594fa2b1bb12",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "url-variants",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[url:value = 'HTTP://Payload.Evil.test:80/Path/File.EXE#frag' OR url:value = 'ftp://files.evil.test/x.bin' OR url:value = 'download.evil.test/update.exe']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--7799ba98-6c16-49c9-a262-820cd60dbc4a",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "allowlist-hits",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = 'www.sophos.com' OR domain-name:value = 'raw.githubusercontent.com' OR url:value = 'https://raw.githubusercontent.com/evil-user/repo/main/x.exe']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "description": "platform domain must not be blocked; the exact URL is fine",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--70ee4ebe-701c-45dd-a06a-669454202dbb",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "duplicate",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.10']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 95
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--ee5dfb4a-bcb6-4be7-8eb4-c3dba428eeea",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "domain-is-ip",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[domain-name:value = '198.51.100.123']",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--edbbe059-a2b2-46b7-8d80-cab12b3a96d1",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "start-stop-closed",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.200'] START t'2025-01-01T00:00:00Z' STOP t'2025-06-01T00:00:00Z'",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "indicator",
+      "spec_version": "2.1",
+      "id": "indicator--c5b3d1b0-8989-43ed-b37a-9d9e5e9aa7c7",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "parse-error",
+      "indicator_types": [
+        "malicious-activity"
+      ],
+      "pattern": "[ipv4-addr:value = '198.51.100.251'",
+      "pattern_type": "stix",
+      "valid_from": "2026-09-01T00:00:00Z",
+      "confidence": 90
+    },
+    {
+      "type": "ipv4-addr",
+      "spec_version": "2.1",
+      "id": "ipv4-addr--def6628f-e685-5f66-ba35-392067cea523",
+      "value": "198.51.100.150"
+    },
+    {
+      "type": "relationship",
+      "spec_version": "2.1",
+      "id": "relationship--51b72199-feb1-4361-9fe6-e93917b9e949",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "relationship_type": "based-on",
+      "source_ref": "indicator--a3842312-39c0-4189-b15c-7236889da34b",
+      "target_ref": "ipv4-addr--def6628f-e685-5f66-ba35-392067cea523"
+    },
+    {
+      "type": "malware",
+      "spec_version": "2.1",
+      "id": "malware--6f521712-78d6-466e-b218-e5e4426a8a1d",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "name": "TestDropper",
+      "is_family": true
+    },
+    {
+      "type": "url",
+      "spec_version": "2.1",
+      "id": "url--d66e35bd-2bdf-5c99-93db-1bc91db99ebb",
+      "value": "hxxps://drop.evil[.]test/a.ps1",
+      "defanged": true
+    },
+    {
+      "type": "relationship",
+      "spec_version": "2.1",
+      "id": "relationship--43edeca9-6f52-401b-9601-f38dc6dc354e",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "relationship_type": "communicates-with",
+      "source_ref": "malware--6f521712-78d6-466e-b218-e5e4426a8a1d",
+      "target_ref": "url--d66e35bd-2bdf-5c99-93db-1bc91db99ebb"
+    },
+    {
+      "type": "domain-name",
+      "spec_version": "2.1",
+      "id": "domain-name--c40ade33-ccb0-5a9e-897d-440fca5b0c27",
+      "value": "victim-corp.test"
+    },
+    {
+      "type": "ipv4-addr",
+      "spec_version": "2.1",
+      "id": "ipv4-addr--c640d5b5-3af9-596e-9bbb-4df56813453e",
+      "value": "198.51.100.160"
+    },
+    {
+      "type": "relationship",
+      "spec_version": "2.1",
+      "id": "relationship--71dde199-f4ac-4e81-b3e2-8427a3908f12",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "relationship_type": "based-on",
+      "source_ref": "indicator--656e4a22-7091-4707-b204-533c47b129fe",
+      "target_ref": "ipv4-addr--c640d5b5-3af9-596e-9bbb-4df56813453e"
+    },
+    {
+      "type": "observed-data",
+      "id": "observed-data--02a4f9a0-2b6b-4121-8b9d-7d8b8203784e",
+      "created": "2026-09-01T00:00:00.000Z",
+      "modified": "2026-09-01T00:00:00.000Z",
+      "first_observed": "2026-09-01T00:00:00Z",
+      "last_observed": "2026-09-01T00:00:00Z",
+      "number_observed": 1,
+      "objects": {
+        "0": {
+          "type": "domain-name",
+          "value": "observed-only.evil.test"
+        }
+      }
+    }
+  ]
+}

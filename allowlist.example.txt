@@ -1,0 +1,39 @@
+# Never publish these. One entry per line; # starts a comment.
+# IPs and CIDRs apply to ips.txt.
+# Domains apply to domains.txt and cover every subdomain.
+# A domain entry does NOT exempt URLs on that host: an exact malicious URL on a
+# shared platform is still worth blocking. List a URL prefix to exempt URLs.
+
+# Your own estate
+# 203.0.113.0/24
+# example.com
+
+# Shared platforms that STIX feeds often name as "malicious domains" because a
+# payload sat on them. Blocking the whole domain breaks the business.
+sophos.com
+github.com
+raw.githubusercontent.com
+githubusercontent.com
+drive.google.com
+docs.google.com
+storage.googleapis.com
+dropbox.com
+dl.dropboxusercontent.com
+onedrive.live.com
+1drv.ms
+sharepoint.com
+cdn.discordapp.com
+discord.com
+pastebin.com
+amazonaws.com
+cloudfront.net
+azureedge.net
+blob.core.windows.net
+web.core.windows.net
+firebasestorage.googleapis.com
+transfer.sh
+ngrok.io
+ngrok-free.app
+trycloudflare.com
+workers.dev
+pages.dev

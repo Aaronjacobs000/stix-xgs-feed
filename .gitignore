@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+
+# Local runtime data, secrets and certificates
+/feeds/
+/data/
+/secrets/
+/tls/
+*.env
+*.key
+*.pem
+/config.toml
+/config.json
+/report.json
+/config/
